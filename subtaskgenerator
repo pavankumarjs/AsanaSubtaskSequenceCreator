@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# parent task id
+TASK_ID=1111111111
+
+# Sub task name. Example: Chapter
+SUBTASK_NAME=$1
+
+# number of subtasks to create
+N=3
+
+# Due date for the first subtask. Leave empty if not required
+# Format: yyyy-mm-dd
+START_DATE=2014-06-09
+
+# Time interval between the sequence of subtasks in days
+# Used only if START_DATE is set
+INTERVAL_DAYS=2
+
+# Assignee id. To assign subtask. Leave empty if not required
+ASSIGNEE_ID=1111111111
+
+# Asana API key
+API_KEY=AAAAAAAAAAAAAAAAAA
+
+echo "Starting.."
+
+CURL_COMMAND="curl -u $API_KEY: https://app.asana.com/api/1.0/tasks/$TASK_ID/subtasks"
+
+for (( i=$N; i>=1; i-- ))
+do
+	echo -n "Creating subtask $SUBTASK_NAME $i "
+
+	COMMAND="$CURL_COMMAND -d name=\"$SUBTASK_NAME $i\""
+
+	if [ $START_DATE ];then
+		DAYS_TO_ADD=$((($i-1) * $INTERVAL_DAYS))
+		DUE_DATE=$(eval date -j -v +${DAYS_TO_ADD}d -f "%Y-%m-%d" $START_DATE +%Y-%m-%d )
+		COMMAND="$COMMAND -d due_on=$DUE_DATE"
+		echo -n "with due date on $DUE_DATE "
+	fi
+
+	if [ $ASSIGNEE_ID ];then
+		COMMAND="$COMMAND -d assignee=$ASSIGNEE_ID"
+		echo -n " assigned to $ASSIGNEE_ID "
+	fi
+
+	echo ""
+	eval $COMMAND
+	echo ""
+done
